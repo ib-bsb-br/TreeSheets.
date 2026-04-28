@@ -6,8 +6,16 @@ struct TreeSheetsScriptImpl : public ScriptInterface {
     enum { max_new_grid_cells = 256 * 256 };  // Don't allow crazy sizes.
 
     void SwitchToCurrentDocument() {
-        document = sys->frame->GetCurrentTab()->doc.get();
-        current = document->root.get();
+        auto tab = sys->frame->GetCurrentTab();
+        document = tab ? tab->doc.get() : nullptr;
+        current = document ? document->root.get() : nullptr;
+        lowestcommonancestor = nullptr;
+    }
+
+    void SwitchToDocument(TSCanvas *tab) {
+        // Use the exact tab returned by lookup so script state never depends on prior UI selection.
+        document = tab ? tab->doc.get() : nullptr;
+        current = document ? document->root.get() : nullptr;
         lowestcommonancestor = nullptr;
     }
 
@@ -53,8 +61,8 @@ struct TreeSheetsScriptImpl : public ScriptInterface {
     }
 
     bool LoadDocument(const char *filename) {
-        if (sys->frame->GetTabByFileName(filename)) {
-            SwitchToCurrentDocument();
+        if (auto tab = sys->frame->GetTabByFileName(filename)) {
+            SwitchToDocument(tab);
             return true;
         }
 

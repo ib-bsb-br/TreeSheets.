@@ -53,9 +53,15 @@ struct TreeSheetsScriptImpl : public ScriptInterface {
     }
 
     bool LoadDocument(const char *filename) {
-        auto message = sys->LoadDB(filename);
-        if (message.IsEmpty()) return false;
+        if (sys->frame->GetTabByFileName(filename)) {
+            SwitchToCurrentDocument();
+            return true;
+        }
 
+        auto message = sys->LoadDB(filename);
+        if (!message.IsEmpty()) return false;
+
+        sys->frame->GetTabByFileName(filename);
         SwitchToCurrentDocument();
         return true;
     }

@@ -493,30 +493,35 @@ struct Grid {
         cells.clear();
         cells.resize((xs + nxs) * (ys + nys));
 
-        int oxs = xs;
-        int oys = ys;
         xs += nxs;
         ys += nys;
         SetOrient();
         int opos = 0;
         foreachcell(c) {
-            if (x != dx && y != dy) { c = std::move(ocells[opos++]); }
+            const bool inserted_col = nxs && x >= dx && x < dx + nxs;
+            const bool inserted_row = nys && y >= dy && y < dy + nys;
+            if (!inserted_col && !inserted_row) { c = std::move(ocells[opos++]); }
         }
         foreachcell(c) {
-            if (x == dx || y == dy) {
+            const bool inserted_col = nxs && x >= dx && x < dx + nxs;
+            const bool inserted_row = nys && y >= dy && y < dy + nys;
+            if (inserted_col || inserted_row) {
                 if (nc) {
                     c = std::move(nc);
                 } else {
-                    int sx = nxs ? max(0, min(dx - 1, xs - 1)) : x;
-                    int sy = nxs ? y : max(0, min(dy - 1, ys - 1));
-                    Cell *colcell = C(sx, sy).get();
+                    int sx = x;
+                    int sy = y;
+                    if (nxs) sx = dx > 0 ? dx - 1 : dx + nxs;
+                    if (nys) sy = dy > 0 ? dy - 1 : dy + nys;
+                    Cell *colcell =
+                        sx >= 0 && sx < xs && sy >= 0 && sy < ys ? C(sx, sy).get() : nullptr;
                     c = make_unique<Cell>(cell, colcell);
                     if (colcell) c->text.relsize = colcell->text.relsize;
                 }
             }
         }
 
-        if (dx >= 0) colwidths.insert(colwidths.begin() + dx, cell->ColWidth());
+        if (dx >= 0) colwidths.insert(colwidths.begin() + dx, nxs, cell->ColWidth());
     }
 
     void Save(wxDataOutputStream &dos, Cell *ocs) const {

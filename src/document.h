@@ -188,13 +188,62 @@ struct Document {
             dos.WriteString(wxEmptyString);
         }
 
+        wxString backupfilename;
+        wxString stagedbackupfilename;
+        wxString oldbackupfilename;
+        wxString backup_warning;
+        bool staged_backup = false;
+
         if (!istempfile && sys->makebaks && ::wxFileExists(filename)) {
-            ::wxRemoveFile(sys->BakName(filename));
-            ::wxRenameFile(filename, sys->BakName(filename));
+            backupfilename = sys->BakName(filename);
+            stagedbackupfilename = sys->NewName(backupfilename);
+            oldbackupfilename = sys->ExtName(filename, ".bak.old");
+
+            if (::wxFileExists(stagedbackupfilename) && !::wxRemoveFile(stagedbackupfilename)) {
+                ::wxRemoveFile(savefilename);
+                return _("Error replacing temporary backup file.");
+            }
+
+            if (!::wxRenameFile(filename, stagedbackupfilename, false)) {
+                ::wxRemoveFile(savefilename);
+                return _("Error creating backup file.");
+            }
+
+            staged_backup = true;
         }
 
-        if (!::wxRenameFile(savefilename, targetfilename, true)) {
-            return _("Error renaming temporary file.");
+        if (!::wxRenameFile(savefilename, targetfilename, !staged_backup)) {
+            wxString message = _("Error renaming temporary file.");
+            if (staged_backup && !::wxRenameFile(stagedbackupfilename, filename, false)) {
+                message += "\n";
+                message += _("Error restoring original file from backup.");
+            }
+            return message;
+        }
+
+        if (staged_backup) {
+            bool old_backup_rotated = false;
+            if (::wxFileExists(backupfilename)) {
+                if (::wxFileExists(oldbackupfilename) && !::wxRemoveFile(oldbackupfilename)) {
+                    backup_warning = _("Saved file, but could not rotate the previous backup file.");
+                } else if (!::wxRenameFile(backupfilename, oldbackupfilename, false)) {
+                    backup_warning = _("Saved file, but could not rotate the previous backup file.");
+                } else {
+                    old_backup_rotated = true;
+                }
+            }
+
+            if (backup_warning.IsEmpty()) {
+                if (!::wxRenameFile(stagedbackupfilename, backupfilename, false)) {
+                    backup_warning = _("Saved file, but could not finalize the backup file.");
+                    if (old_backup_rotated) {
+                        ::wxRenameFile(oldbackupfilename, backupfilename, false);
+                    }
+                } else if (old_backup_rotated && ::wxFileExists(oldbackupfilename) &&
+                           !::wxRemoveFile(oldbackupfilename)) {
+                    backup_warning = _("Saved file, but could not remove the old backup file.");
+                }
+            }
         }
 
         lastmodsinceautosave = 0;
@@ -217,8 +266,13 @@ struct Document {
         }
         UpdateFileName(page);
         if (success) *success = true;
-        return wxString::Format(_("Saved %s successfully (in %lld milliseconds)."), filename,
-                                end_saving_time - start_saving_time);
+        wxString message = wxString::Format(_("Saved %s successfully (in %lld milliseconds)."),
+                                            filename, end_saving_time - start_saving_time);
+        if (!backup_warning.IsEmpty()) {
+            message += "\n";
+            message += backup_warning;
+        }
+        return message;
     }
 
     void DrawSelect(wxDC &dc, Selection &s) {
@@ -2284,11 +2338,12 @@ struct Document {
         Cell *c = WalkPath(ui->path);
 
         if (c->parent && c->parent->grid) {
-            Grid *g = c->parent->grid.get();
+            Cell *old_parent = c->parent;
+            Grid *g = old_parent->grid.get();
             Selection s = g->FindCell(c);
             std::swap(ui->clone, g->C(s.x, s.y));
             c = g->C(s.x, s.y).get();
-            c->parent = ui->clone->parent;
+            c->parent = old_parent;
         } else {
             std::swap(ui->clone, root);
             c = root.get();

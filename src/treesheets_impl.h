@@ -54,7 +54,7 @@ struct TreeSheetsScriptImpl : public ScriptInterface {
 
     bool LoadDocument(const char *filename) {
         auto message = sys->LoadDB(filename);
-        if (message.IsEmpty()) return false;
+        if (!message.IsEmpty()) return false;
 
         SwitchToCurrentDocument();
         return true;

@@ -219,7 +219,7 @@ struct Document {
         if (!::wxRenameFile(savefilename, targetfilename, !staged_backup)) {
             wxString message = _("Error renaming temporary file.");
             if (::wxFileExists(savefilename)) ::wxRemoveFile(savefilename);
-            if (staged_backup && !::wxRenameFile(stagedbackupfilename, filename, false)) {
+            if (staged_backup && !::wxRenameFile(stagedbackupfilename, filename, true)) {
                 message += "\n";
                 message += _("Error restoring original file from backup.");
             }
@@ -245,7 +245,7 @@ struct Document {
             if (!::wxRenameFile(stagedbackupfilename, backupfilename, false)) {
                 append_backup_warning(_("Saved file, but could not finalize the backup file."));
                 if (old_backup_rotated) {
-                    ::wxRenameFile(oldbackupfilename, backupfilename, false);
+                    ::wxRenameFile(oldbackupfilename, backupfilename, true);
                 }
             } else if (::wxFileExists(oldbackupfilename) && !::wxRemoveFile(oldbackupfilename)) {
                 append_backup_warning(_("Saved file, but could not remove the old backup file."));

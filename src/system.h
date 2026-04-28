@@ -153,15 +153,17 @@ struct System {
         auto trans = wxTranslations::Get();
         auto language = trans ? trans->GetBestTranslation("ts") : wxString("");
 
-        if (language.Len() == 5 &&
-            LoadDB(frame->app->GetDocPath("examples/tutorial-" + language + ".cts")).IsEmpty()) {
-            return;
+        if (language.Len() == 5) {
+            auto localized = frame->app->GetDocPath("examples/tutorial-" + language + ".cts");
+            auto message = LoadDB(localized);
+            if (message.IsEmpty()) return;
         }
 
         language.Truncate(2);
-        if (language.Len() == 2 &&
-            LoadDB(frame->app->GetDocPath("examples/tutorial-" + language + ".cts")).IsEmpty()) {
-            return;
+        if (language.Len() == 2) {
+            auto localized = frame->app->GetDocPath("examples/tutorial-" + language + ".cts");
+            auto message = LoadDB(localized);
+            if (message.IsEmpty()) return;
         }
 
         LoadDB(frame->app->GetDocPath("examples/tutorial.cts"));

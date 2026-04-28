@@ -489,6 +489,8 @@ struct Grid {
     }
 
     void InsertCells(int dx, int dy, int nxs, int nys, unique_ptr<Cell> nc = nullptr) {
+        ASSERT(nxs >= 0 && nys >= 0);
+
         vector<unique_ptr<Cell>> ocells = std::move(cells);
         cells.clear();
         cells.resize((xs + nxs) * (ys + nys));
@@ -511,8 +513,8 @@ struct Grid {
                 } else {
                     int sx = x;
                     int sy = y;
-                    if (nxs) sx = dx > 0 ? dx - 1 : dx + nxs;
-                    if (nys) sy = dy > 0 ? dy - 1 : dy + nys;
+                    if (nxs) sx = dx > 0 ? dx - 1 : min(xs - 1, dx + nxs);
+                    if (nys) sy = dy > 0 ? dy - 1 : min(ys - 1, dy + nys);
                     Cell *colcell =
                         sx >= 0 && sx < xs && sy >= 0 && sy < ys ? C(sx, sy).get() : nullptr;
                     c = make_unique<Cell>(cell, colcell);

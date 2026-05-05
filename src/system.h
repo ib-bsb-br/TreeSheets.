@@ -122,17 +122,20 @@ struct System {
 
         auto numfiles = static_cast<int>(cfg->Read("numopenfiles", static_cast<long>(0)));
         wxString focusfile = cfg->Read("lastopenfile", "");
-        int selection = -1;
         loop(i, numfiles) {
-            wxString filename;
-            cfg->Read(wxString::Format("lastopenfile_%d", i), &filename);
-            if (!LoadDB(filename) && filename == focusfile) selection = i;
+            wxString remembered;
+            cfg->Read(wxString::Format("lastopenfile_%d", i), &remembered);
+            if (remembered.IsEmpty()) continue;
+
+            LoadDB(remembered);
         }
 
         if (!filename.IsEmpty()) {
             LoadDB(filename);
-        } else if (selection >= 0) {
-            frame->notebook->SetSelection(selection);
+        } else if (!focusfile.IsEmpty()) {
+            // Re-select by filename after all tabs are loaded because insertion at index 0 shifts
+            // page indices for previously loaded tabs.
+            frame->GetTabByFileName(focusfile);
         }
 
         if (!frame->notebook->GetPageCount()) LoadTutorial();
@@ -147,15 +150,17 @@ struct System {
         auto trans = wxTranslations::Get();
         auto language = trans ? trans->GetBestTranslation("ts") : wxString("");
 
-        if (language.Len() == 5 &&
-            !LoadDB(frame->app->GetDocPath("examples/tutorial-" + language + ".cts"))[0]) {
-            return;
+        if (language.Len() == 5) {
+            auto localized = frame->app->GetDocPath("examples/tutorial-" + language + ".cts");
+            auto message = LoadDB(localized);
+            if (message.IsEmpty()) return;
         }
 
         language.Truncate(2);
-        if (language.Len() == 2 &&
-            !LoadDB(frame->app->GetDocPath("examples/tutorial-" + language + ".cts"))[0]) {
-            return;
+        if (language.Len() == 2) {
+            auto localized = frame->app->GetDocPath("examples/tutorial-" + language + ".cts");
+            auto message = LoadDB(localized);
+            if (message.IsEmpty()) return;
         }
 
         LoadDB(frame->app->GetDocPath("examples/tutorial.cts"));

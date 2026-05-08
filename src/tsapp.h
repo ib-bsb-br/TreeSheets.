@@ -69,12 +69,14 @@ struct TSApp : wxApp {
         }
 
         wxStandardPaths::Get().SetFileLayout(wxStandardPathsBase::FileLayout_XDG);
+        #ifdef __WXMSW__
+            MSWEnableDarkMode();
+        #endif
         sys = new System(portable);
         if (start_minimized) sys->startminimized = true;
         SetupInternationalization();
         #ifdef __WXMSW__
             DeclareHiDpiAwareOnWindows();
-            MSWEnableDarkMode();
         #endif
         frame = new TSFrame(this);
 

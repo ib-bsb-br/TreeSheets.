@@ -126,3 +126,24 @@ inline uint64_t FNV1A64(uint8_t *data, size_t size) {
     }
     return hash;
 }
+
+#ifdef TREE_SHEETS_LIGHT_PROFILING
+struct TSProfileScope {
+    const char *label;
+    std::chrono::steady_clock::time_point start;
+
+    explicit TSProfileScope(const char *scope_label)
+        : label(scope_label), start(std::chrono::steady_clock::now()) {}
+
+    ~TSProfileScope() {
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - start).count();
+        wxLogVerbose("ts.profile %s %lld us", label, (long long)elapsed);
+    }
+};
+#define TS_PROFILE_SCOPE_CONCAT_INNER(a, b) a##b
+#define TS_PROFILE_SCOPE_CONCAT(a, b) TS_PROFILE_SCOPE_CONCAT_INNER(a, b)
+#define TS_PROFILE_SCOPE(label) TSProfileScope TS_PROFILE_SCOPE_CONCAT(ts_profile_scope_, __LINE__)(label)
+#else
+#define TS_PROFILE_SCOPE(label) do {} while (0)
+#endif

@@ -10,6 +10,8 @@ jobs:
   build-rk3588-bullseye-arm64:
     name: Build RK3588-tuned Debian 11 arm64 package
     runs-on: ubuntu-24.04-arm
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     container:
       image: debian:11
     permissions:
@@ -37,6 +39,7 @@ jobs:
       - name: configure rk3588 preset
         run: |
           cmake --preset rk3588-bullseye-release \
+            -DENABLE_LOBSTER=OFF \
             -DTREESHEETS_VERSION=${{ github.run_number }}
 
       - name: build and package

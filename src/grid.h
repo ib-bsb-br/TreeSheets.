@@ -167,6 +167,7 @@ struct Grid {
 
     void Render(Document *doc, int bx, int by, wxDC &dc, int depth, int sx, int sy, int xoff,
                 int yoff) {
+        TS_PROFILE_SCOPE("Grid::Render");
         xoff = C(0, 0)->ox - view_margin - view_grid_outer_spacing - 1;
         yoff = C(0, 0)->oy - view_margin - view_grid_outer_spacing - 1;
         int maxx = C(xs - 1, 0)->ox + C(xs - 1, 0)->sx;

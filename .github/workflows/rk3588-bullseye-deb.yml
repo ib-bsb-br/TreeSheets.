@@ -1,0 +1,65 @@
+name: RK3588 Bullseye .deb
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-rk3588-bullseye-arm64:
+    name: Build RK3588-tuned Debian 11 arm64 package
+    runs-on: ubuntu-24.04-arm
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    container:
+      image: debian:11
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+
+      - name: install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential \
+            ca-certificates \
+            git \
+            libgl1-mesa-dev \
+            libgtk-3-dev \
+            libxext-dev \
+            lld \
+            ninja-build \
+            pkg-config \
+            python3-pip
+          python3 -m pip install --no-cache-dir "cmake>=3.25,<3.31"
+          cmake --version
+
+      - name: configure rk3588 preset
+        run: |
+          cmake --preset rk3588-bullseye-release \
+            -DENABLE_LOBSTER=OFF \
+            -DTREESHEETS_VERSION=${{ github.run_number }}
+
+      - name: build and package
+        run: cmake --build --preset package-rk3588-bullseye-release -j"$(nproc)"
+
+      - name: normalize deb name
+        shell: bash
+        run: |
+          shopt -s extglob nullglob
+          files=(_build/treesheets_*:*.deb)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No epoch-prefixed .deb files found to normalize."
+          else
+            for file in "${files[@]}"; do
+              mv -v "${file}" "${file/_+([[:digit:]]):/_}"
+            done
+          fi
+
+      - name: upload rk3588 bullseye package
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: treesheets-rk3588-bullseye-arm64-deb
+          path: _build/treesheets_*.deb

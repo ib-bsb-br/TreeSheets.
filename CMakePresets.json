@@ -1,0 +1,52 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base-release",
+      "displayName": "Base Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/_build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "/usr",
+        "CPACK_PACKAGING_INSTALL_PREFIX": "/usr",
+        "wxBUILD_SHARED": "OFF",
+        "wxBUILD_INSTALL": "OFF",
+        "wxUSE_SYS_LIBS": "OFF",
+        "TREE_SHEETS_LIGHT_PROFILING": "OFF"
+      }
+    },
+    {
+      "name": "rk3588-bullseye-release",
+      "displayName": "RK3588 Bullseye Release",
+      "inherits": "base-release",
+      "cacheVariables": {
+        "TREE_SHEETS_RK3588_OPT": "ON",
+        "TREE_SHEETS_LIGHT_PROFILING": "OFF"
+      }
+    },
+    {
+      "name": "rk3588-bullseye-profile",
+      "displayName": "RK3588 Bullseye Profiling",
+      "inherits": "base-release",
+      "cacheVariables": {
+        "TREE_SHEETS_RK3588_OPT": "ON",
+        "TREE_SHEETS_LIGHT_PROFILING": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "package-rk3588-bullseye-release",
+      "configurePreset": "rk3588-bullseye-release",
+      "targets": [
+        "package"
+      ]
+    }
+  ]
+}

@@ -107,6 +107,9 @@ These are strongly feasible without replacing GUI stack and will give immediate 
 3. Add counters/timers around:
    - `Document::Draw`, `Document::Render`, `Grid::Render`, `Text::Render`.
 4. Benchmark on your dual-monitor setup with representative large sheets.
+5. Add reproducible `CMakePresets.json` profile:
+   - `rk3588-bullseye-release` for local + CI parity.
+   - Use this preset from CI workflow to avoid duplicated flag definitions.
 
 ### Phase B (2–4 weeks): deeper UI performance
 

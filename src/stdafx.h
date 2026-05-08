@@ -63,6 +63,7 @@
 #include <algorithm>
 #include <array>
 #include <clocale>
+#include <chrono>
 #include <condition_variable>
 #include <filesystem>
 #include <functional>

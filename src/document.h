@@ -525,6 +525,7 @@ struct Document {
     }
 
     void Render(wxDC &dc) {
+        TS_PROFILE_SCOPE("Document::Render");
         ResetFont();
         PickFont(dc, 0, 0, 0);
         dc.SetTextForeground(*wxLIGHT_GREY);
@@ -557,6 +558,7 @@ struct Document {
     }
 
     void Draw(wxDC &dc) {
+        TS_PROFILE_SCOPE("Document::Draw");
         if (!root) return;
         canvas->GetClientSize(&maxx, &maxy);
         Layout(dc);
